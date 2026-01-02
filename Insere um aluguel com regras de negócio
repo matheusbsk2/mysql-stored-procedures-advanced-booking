@@ -1,0 +1,53 @@
+DELIMITER $$
+
+CREATE PROCEDURE novoAluguel_44(
+    IN vClienteNome VARCHAR(150),
+    IN vHospedagem VARCHAR(10),
+    IN vDataInicio DATE,
+    IN vDias INTEGER,
+    IN vPrecoUnitario DECIMAL(10,2)
+)
+BEGIN
+    DECLARE vAluguel VARCHAR(10);
+    DECLARE vCliente VARCHAR(10);
+    DECLARE vDataFinal DATE;
+    DECLARE vNumCliente INTEGER;
+    DECLARE vPrecoTotal DECIMAL(10,2);
+    DECLARE vMensagem VARCHAR(100);
+
+    DECLARE EXIT HANDLER FOR 1452
+    BEGIN
+        SELECT 'Erro de chave estrangeira.' AS mensagem;
+    END;
+
+    SET vNumCliente = (
+        SELECT COUNT(*) FROM clientes WHERE nome = vClienteNome
+    );
+
+    CASE
+        WHEN vNumCliente = 0 THEN
+            SELECT 'Cliente não encontrado.' AS mensagem;
+
+        WHEN vNumCliente > 1 THEN
+            SELECT 'Cliente duplicado. Use o ID.' AS mensagem;
+
+        ELSE
+            SELECT CAST(MAX(CAST(aluguel_id AS UNSIGNED)) + 1 AS CHAR)
+            INTO vAluguel FROM alugueis;
+
+            CALL calculaDataFinal_43(vDataInicio, vDataFinal, vDias);
+
+            SET vPrecoTotal = vDias * vPrecoUnitario;
+
+            SELECT cliente_id INTO vCliente
+            FROM clientes WHERE nome = vClienteNome;
+
+            INSERT INTO alugueis
+            VALUES (vAluguel, vCliente, vHospedagem, vDataInicio, vDataFinal, vPrecoTotal);
+
+            SET vMensagem = CONCAT('Aluguel incluído com sucesso - ID ', vAluguel);
+            SELECT vMensagem AS mensagem;
+    END CASE;
+END$$
+
+DELIMITER ;
