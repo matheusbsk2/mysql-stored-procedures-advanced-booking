@@ -1,0 +1,49 @@
+DELIMITER $$
+
+CREATE PROCEDURE novosAlugueis_55(
+    IN lista VARCHAR(255),
+    IN vHospedagem VARCHAR(10),
+    IN vDataInicio DATE,
+    IN vDias INTEGER,
+    IN vPrecoUnitario DECIMAL(10,2)
+)
+BEGIN
+    DECLARE fimCursor INTEGER DEFAULT 0;
+    DECLARE vnome VARCHAR(255);
+
+    -- Tabela temporária para armazenar os nomes
+    DROP TEMPORARY TABLE IF EXISTS temp_nomes;
+    CREATE TEMPORARY TABLE temp_nomes (nome VARCHAR(255));
+
+    -- Popula a tabela com a lista
+    CALL inclui_usuarios_lista_52(lista);
+
+    DECLARE cursor1 CURSOR FOR
+        SELECT nome FROM temp_nomes;
+
+    DECLARE CONTINUE HANDLER FOR NOT FOUND
+        SET fimCursor = 1;
+
+    OPEN cursor1;
+
+    read_loop: LOOP
+        FETCH cursor1 INTO vnome;
+        IF fimCursor = 1 THEN
+            LEAVE read_loop;
+        END IF;
+
+        CALL novoAluguel_44(
+            vnome,
+            vHospedagem,
+            vDataInicio,
+            vDias,
+            vPrecoUnitario
+        );
+    END LOOP;
+
+    CLOSE cursor1;
+
+    DROP TEMPORARY TABLE IF EXISTS temp_nomes;
+END$$
+
+DELIMITER ;
