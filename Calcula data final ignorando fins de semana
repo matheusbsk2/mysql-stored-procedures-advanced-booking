@@ -1,0 +1,24 @@
+DELIMITER $$
+
+CREATE PROCEDURE calculaDataFinal_43(
+    IN vDataInicio DATE,
+    INOUT vDataFinal DATE,
+    IN vDias INTEGER
+)
+BEGIN
+    DECLARE vContador INTEGER DEFAULT 1;
+    DECLARE vDiaSemana INTEGER;
+
+    SET vDataFinal = vDataInicio;
+
+    WHILE vContador < vDias DO
+        SET vDataFinal = vDataFinal + INTERVAL 1 DAY;
+        SET vDiaSemana = DAYOFWEEK(vDataFinal);
+
+        IF vDiaSemana NOT IN (1, 7) THEN
+            SET vContador = vContador + 1;
+        END IF;
+    END WHILE;
+END$$
+
+DELIMITER ;
